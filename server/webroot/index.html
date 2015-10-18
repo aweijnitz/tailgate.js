@@ -66,8 +66,9 @@
         return false;
     });
 
-    socket.on('time', function (msg) {
-        $('#messages').append($('<li>').text(msg));
+    socket.on('files', function (msg) {
+        $('#messages').append($('<li>').text(msg.files));
+        console.log(msg);
     });
     socket.on('msg', function (msg) {
         $('#messages').append($('<li>').text(msg));

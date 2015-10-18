@@ -9,13 +9,13 @@ var path = require('path');
 var readFilesInDir = function readFilesInDir(dir, cb) {
     var absPath = path.resolve(dir);
     fs.readdir(absPath, function dirHandler(err, dirContent) {
-        if(err)
+        if (err)
             cb(err, null);
         else {
             var files = [];
-            dirContent.map(function(file) {
-                var fullPath = path.join(absPath,file);
-                if(fs.statSync(fullPath).isFile())
+            dirContent.map(function (file) {
+                var fullPath = path.join(absPath, file);
+                if (fs.statSync(fullPath).isFile())
                     files.push(fullPath);
             });
             cb(null, files);
@@ -23,4 +23,25 @@ var readFilesInDir = function readFilesInDir(dir, cb) {
     });
 };
 
+
+/**
+ * Read a chunk from a file.
+ *
+ * @param start - Start offset.
+ * @param end - End offset.
+ * @param cb - callback function. cb(err, content)
+ */
+var readFileChunk = function readFileChunk(start, end, cb) {
+    var fileStream = fs.createReadStream(filePath, {start: start, end: end});
+
+    fileStream.on('data', function (data) {
+        cb(null, data);
+    });
+
+    fileStream.on('error', function (err) {
+        cb(err, null);
+    });
+};
+
 exports = module.exports.readFilesInDir = readFilesInDir;
+exports = module.exports.readFileChunk = readFileChunk;
