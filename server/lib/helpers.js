@@ -31,7 +31,12 @@ var readFilesInDir = function readFilesInDir(dir, cb) {
  * @param end - End offset.
  * @param cb - callback function. cb(err, content)
  */
-var readFileChunk = function readFileChunk(start, end, cb) {
+var readFileChunk = function readFileChunk(filePath, start, end, cb) {
+    if (end <= start) {
+        cb(null, '');
+        return;
+    }
+
     var fileStream = fs.createReadStream(filePath, {start: start, end: end});
 
     fileStream.on('data', function (data) {
