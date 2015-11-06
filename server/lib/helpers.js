@@ -6,7 +6,7 @@ var path = require('path');
  * @param dir - Folder to scan fr files
  * @param cb - callback function. cb(err, filePathsArray)
  */
-var readFilesInDir = function readFilesInDir(dir, cb) {
+var listFiles = function listFiles(dir, cb) {
     var absPath = path.resolve(dir);
     fs.readdir(absPath, function dirHandler(err, dirContent) {
         if (err)
@@ -48,5 +48,30 @@ var readFileChunk = function readFileChunk(filePath, start, end, cb) {
     });
 };
 
-exports = module.exports.readFilesInDir = readFilesInDir;
+/**
+ *
+ * @param useConsole
+ * @returns {{debug, info, warn, error}}
+ */
+var mockLogger = function (useConsole) {
+    var printLog = false;
+    if (!(typeof useConsole === 'undefined') && useConsole) printLog = true;
+
+    var makeLogger = function (level) {
+        return function (msg) {
+            if (printLog)
+                console.log(level + " - " + msg);
+        };
+    };
+
+    return {
+        debug: makeLogger('DEBUG'),
+        info: makeLogger('INFO'),
+        warn: makeLogger('WARN'),
+        error: makeLogger('ERROR')
+    };
+};
+
+exports = module.exports.listFiles = listFiles;
 exports = module.exports.readFileChunk = readFileChunk;
+exports = module.exports.mockLogger = mockLogger;

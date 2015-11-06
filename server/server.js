@@ -2,48 +2,19 @@ var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var path = require('path');
+
 var PropertiesReader = require('properties-reader');
+
 var express = require('express');
 var compression = require('compression');
 var serveIndex = require('serve-index'); // directory listings middleware
-var chokidar = require('chokidar');
+var _ = require('lodash');
 
-var readFilesInDir = require('./lib/helpers').readFilesInDir;
-var readFileChunk = require('./lib/helpers').readFileChunk;
+var listFiles = require('./lib/helpers').listFiles;
 var config = PropertiesReader('./conf/tailgate.ini');
 
-var log = console.log.bind(console);
-
-// Initialize watcher
-var watcher = chokidar.watch(path.resolve(config.get('disk.tail.dir')), {
-    ignored: /[\/\\]\./,
-    persistent: true
-});
-
-// Make shure watcher is closed on process exit
-process.on('exit', function (code) {
-    console.log('Exiting with code:', code);
-    watcher.close();
-});
-
-// Add event listeners
-watcher
-    .on('add', function (path, stats) {
-        log('File', path, 'has been added');
-    })
-    .on('change', function (path, stats) {
-        log('File', path, 'has been changed');
-    })
-    .on('unlink', function (path) {
-        log('File', path, 'has been removed');
-    })
-    .on('error', function (error) {
-        log('Error happened', error);
-    })
-    .on('ready', function () {
-        log('Initial scan complete. Ready for changes.');
-    });
-
+var FileTail = require('./lib/FileTail.js');
+var clients = new FileTail();
 
 // Serving the client app
 //
@@ -60,17 +31,19 @@ app.use(compression()); // Compress responses of all requests
 //
 io.on('connection', function (socket) {
 
-    readFilesInDir(config.get('disk.tail.dir'), function (err, files) {
+    listFiles(config.get('disk.tail.dir'), function (err, files) {
         if (!err) {
-            socket.emit('files', {files: files});
-            console.log('a user connected ');
-            console.log(files);
+            socket.emit('files', {files: files}); // Send available files to client
+            console.log('a user connected id: ' + socket.id);
+            clients.put(socket.id, socket);
         }
     });
 
     socket.on('disconnect', function () {
         console.log('user disconnected');
+        clients = clients.remove(socket.id);
     });
+
     socket.on('tail', function (msg) {
         //io.emit('msg', msg); // Broadcast to all clients
         console.log('message: ' + msg);
@@ -80,7 +53,7 @@ io.on('connection', function (socket) {
 // Start the server
 //
 server.listen(config.get('main.server.port'), function () {
-    console.log('listening on *:' + config.get('main.server.port'));
-    console.log('Serving client from: ' + path.resolve(config.get('main.server.webroot')));
+    console.log('Listening on *:' + config.get('main.server.port'));
+    console.log('Client webroot: ' + path.resolve(config.get('main.server.webroot')));
     console.log('Tailing dir: ' + path.resolve(config.get('disk.tail.dir')));
 });
