@@ -23,10 +23,7 @@ var SessionHandler = function (logger) {
 util.inherits(SessionHandler, EventEmitter);
 
 SessionHandler.prototype.put = function (key, client) {
-    if ('undefined' === typeof this.get(key))
-        this.clients[key] = [];
-
-    this.clients[key].push(client);
+    this.clients[key] = client;
     this.emit('added', {key: key, value: client})
 };
 
