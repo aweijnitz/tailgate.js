@@ -14,7 +14,9 @@ var listFiles = require('./lib/helpers').listFiles;
 var config = PropertiesReader('./conf/tailgate.ini');
 
 var FileTail = require('./lib/FileTail.js');
-var clients = new FileTail();
+var MultiValuedHashtable = require('../lib/MultiValuedHashtable.js');
+
+var tails = new MultiValuedHashtable();
 
 // Serving the client app
 //
@@ -35,18 +37,20 @@ io.on('connection', function (socket) {
         if (!err) {
             socket.emit('files', {files: files}); // Send available files to client
             console.log('a user connected id: ' + socket.id);
-            clients.put(socket.id, socket);
+            //clients.put(socket.id, socket);
         }
     });
 
     socket.on('disconnect', function () {
         console.log('user disconnected');
-        clients = clients.remove(socket.id);
+        //clients = clients.remove(socket.id);
     });
 
     socket.on('tail', function (msg) {
         //io.emit('msg', msg); // Broadcast to all clients
-        console.log('message: ' + msg);
+        console.log('tail: ' + msg);
+        if (_.has(msg, 'fileName'))
+            tails.put(msg.fileName, socket.id);
     });
 });
 
