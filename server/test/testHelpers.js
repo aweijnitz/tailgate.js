@@ -30,6 +30,33 @@ test('listFiles should return list of all *files* in a given folder', function (
 });
 
 
+test('exists should return true if a fle exists', function (t) {
+    var fileName0 = 'test/testData/existing.txt';
+    fs.writeFileSync(fileName0, '123', 'utf8');
+
+    t.ok(helpers.exists(fileName0));
+    fs.unlinkSync(fileName0);
+    t.end();
+});
+
+test('exists should return false if argument is a folder', function (t) {
+    var dir = 'test/testData';
+    var dummyDir = path.resolve(dir + path.sep + 'dummmyDir');
+    fs.mkdirSync(dummyDir);
+
+    t.ok(!helpers.exists(dummyDir));
+    fs.rmdirSync(dummyDir);
+    t.end();
+
+});
+
+test('exists should return false if file does not exist', function (t) {
+    t.ok(!helpers.exists('falsePath'));
+    t.end();
+});
+
+
+
 test('readFileChunk should return new data from the end of a file', function (t) {
     var fileName = 'test/testData/testfile0.txt';
     fs.writeFileSync(fileName, '123', 'utf8');

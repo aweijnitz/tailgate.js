@@ -23,6 +23,19 @@ var listFiles = function listFiles(dir, cb) {
     });
 };
 
+/**
+ * Check that a given path exists and is a file.
+ * @param fileName
+ * @returns {boolean}
+ */
+var exists = function exists(fileName) {
+    try {
+        var s = fs.statSync(fileName);
+        return s.isFile();
+    } catch (err) {
+        return false;
+    }
+};
 
 /**
  * Read a chunk from a file.
@@ -73,5 +86,6 @@ var mockLogger = function (useConsole) {
 };
 
 exports = module.exports.listFiles = listFiles;
+exports = module.exports.exists = exists;
 exports = module.exports.readFileChunk = readFileChunk;
 exports = module.exports.mockLogger = mockLogger;

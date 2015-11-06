@@ -11,12 +11,15 @@ var serveIndex = require('serve-index'); // directory listings middleware
 var _ = require('lodash');
 
 var listFiles = require('./lib/helpers').listFiles;
+var fileExists = require('./lib/helpers').exists;
 var config = PropertiesReader('./conf/tailgate.ini');
 
 var FileTail = require('./lib/FileTail.js');
-var MultiValuedHashtable = require('../lib/MultiValuedHashtable.js');
 
-var tails = new MultiValuedHashtable();
+var HashTable = require('hashtable');
+var tails = new HashTable();
+var clients = new HashTable();
+
 
 // Serving the client app
 //
@@ -43,14 +46,26 @@ io.on('connection', function (socket) {
 
     socket.on('disconnect', function () {
         console.log('user disconnected');
-        //clients = clients.remove(socket.id);
+        tails.forEach(function(fileName, fileTail) {
+            fileTail.removeListener('change', clients.get(''+socket.id));
+        });
+        clients.remove(''+socket.id);
     });
 
     socket.on('tail', function (msg) {
-        //io.emit('msg', msg); // Broadcast to all clients
         console.log('tail: ' + msg);
-        if (_.has(msg, 'fileName'))
-            tails.put(msg.fileName, socket.id);
+        if (_.has(msg, 'fileName') && fileExists(msg.fileName)) {
+            if(tails.get(msg.fileName) == null)
+                tails.put(msg.fileName, new FileTail(msg.fileName));
+
+            var notifyClient = function notifyClient(data) {
+                socket.emit('data', data);
+            };
+
+            clients.put(''+socket.id, notifyClient);
+            tails.get(msg.fileName).on('change', notifyClient);
+        }
+
     });
 });
 
