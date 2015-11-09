@@ -20,7 +20,7 @@ test('listFiles should return list of all *files* in a given folder', function (
         if (err)
             t.end(err);
         else {
-            t.equals(2, data.length);
+            t.equals(3, data.length); // 3 = dummy.md + two test files above
             fs.unlinkSync(fileName0);
             fs.unlinkSync(fileName1);
             fs.rmdirSync(dummyDir);
