@@ -1,4 +1,4 @@
-var logger = require("lib/logger");
+var logger = require('./lib/logger.js');
 var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
@@ -21,9 +21,11 @@ var HashTable = require('hashtable');
 var tails = new HashTable();
 var clients = new HashTable();
 
+logger.info('Initializing server.');
+
 
 // Configure Winston logging for Express
-app.use(require('morgan')({ "stream": logger.stream }));
+app.use(require('morgan')('combined',{ "stream": logger.stream }));
 
 // Serving the client app
 //
@@ -43,13 +45,13 @@ io.on('connection', function (socket) {
     listFiles(config.get('disk.tail.dir'), function (err, files) {
         if (!err) {
             socket.emit('files', {files: files}); // Send available files to client
-            console.log('a user connected id: ' + socket.id);
+            logger.debug('a user connected id: ' + socket.id);
             //clients.put(socket.id, socket);
         }
     });
 
     socket.on('disconnect', function () {
-        console.log('user disconnected');
+        logger.debug('user disconnected');
         tails.forEach(function(fileName, fileTail) {
             fileTail.removeListener('change', clients.get(''+socket.id));
         });
@@ -57,7 +59,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('tail', function (msg) {
-        console.log('tail: ' + msg);
+        logger.debug('tail: ' + msg);
         if (_.has(msg, 'fileName') && fileExists(msg.fileName)) {
             if(tails.get(msg.fileName) == null)
                 tails.put(msg.fileName, new FileTail(msg.fileName));
@@ -76,7 +78,7 @@ io.on('connection', function (socket) {
 // Start the server
 //
 server.listen(config.get('main.server.port'), function () {
-    console.log('Listening on *:' + config.get('main.server.port'));
-    console.log('Client webroot: ' + path.resolve(config.get('main.server.webroot')));
-    console.log('Tailing dir: ' + path.resolve(config.get('disk.tail.dir')));
+    logger.info('Listening on *:' + config.get('main.server.port'));
+    logger.info('Client webroot: ' + path.resolve(config.get('main.server.webroot')));
+    logger.info('Tailing dir: ' + path.resolve(config.get('disk.tail.dir')));
 });
