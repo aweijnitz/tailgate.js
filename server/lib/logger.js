@@ -5,7 +5,18 @@ var logger = new winston.Logger({
     transports: [
         new winston.transports.File({
             level: 'info',
-            filename: './logs/server.log',
+            name: 'info-file',
+            filename: './logs/server_out.log',
+            handleExceptions: true,
+            json: true,
+            maxsize: 5242880, //5MB
+            maxFiles: 3,
+            colorize: false
+        }),
+        new winston.transports.File({
+            level: 'error',
+            name: 'error-file',
+            filename: './logs/server_errors.log',
             handleExceptions: true,
             json: true,
             maxsize: 5242880, //5MB
@@ -25,6 +36,6 @@ var logger = new winston.Logger({
 module.exports = logger;
 module.exports.stream = {
     write: function(message, encoding){
-        logger.info(message);
+        logger.info(message.slice(0, -1));
     }
 };
