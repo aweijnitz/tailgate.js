@@ -1,3 +1,4 @@
+var logger = require("lib/logger");
 var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
@@ -20,6 +21,9 @@ var HashTable = require('hashtable');
 var tails = new HashTable();
 var clients = new HashTable();
 
+
+// Configure Winston logging for Express
+app.use(require('morgan')({ "stream": logger.stream }));
 
 // Serving the client app
 //
