@@ -1,5 +1,3 @@
-var casper = require('casper').create();
-
 casper.test.begin('Google search retrieves 10 or more results', 5, function suite(test) {
     casper.start("http://www.google.fr/", function() {
         test.assertTitle("Google", "google homepage title is the one expected");
